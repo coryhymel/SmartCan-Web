@@ -1,0 +1,69 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <title>SmartCan Middle-Man</title>
+  <meta name="description" content="My Parse App">
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script type="text/javascript" src="http://www.parsecdn.com/js/parse-1.2.18.min.js"></script>
+</head>
+
+<body>
+  
+  <div id="main">
+    <h1>WIMP Spark Core 1</h1>
+
+    <p>This page opens an SSE event stream to listen for updates from the Spark Core. It then relays that data to Parse database.</p>
+
+	<p id="output"></p>
+
+    <div style="display:none" class="error">
+      Looks like there was a problem saving incoming data. Make sure you've set your application ID and javascript key correctly in the call to <code>Parse.initialize</code> in this file.
+    </div>
+    
+  </div>
+
+  <script type="text/javascript">
+    
+    Parse.initialize("XXXXXXXXXXX", "XXXXXXXXXXX");
+    
+    var deviceID    = "XXXXXXXXXXX";
+    var accessToken = "XXXXXXXXXXX";
+    var eventSource = new EventSource("https://api.spark.io/v1/devices/" + deviceID + "/events/?access_token=" + accessToken);
+
+    eventSource.addEventListener('open', function(e) {
+        console.log("Opened!"); 
+        document.getElementById("output").innerHTML = "Event open success";
+        },false);
+
+    eventSource.addEventListener('error', function(e) {
+        console.log("Errored!"); 
+        document.getElementById("output").innerHTML = "Event open error";
+        },false);
+
+    eventSource.addEventListener('Uptime', function(e) {
+
+        var parsedData = JSON.parse(e.data);
+        
+		var TestObject = Parse.Object.extend("Barcode");
+   		var testObject = new TestObject();
+   		
+   		document.getElementById("output").innerHTML = "Saving data to Parse database";
+     	
+     	testObject.save({barcode: parsedData.data}, {
+      		success: function(object) {
+       		 	$(".success").show();
+     		},
+      		error: function(model, error) {
+        		$(".error").show();
+      		}
+    	});
+            
+    }, false);
+  </script>
+</body>
+
+</html>
